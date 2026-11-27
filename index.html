@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Badminton Vote 🏸</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --purple:#6d28d9; --pink:#db2777; --pink-soft:#fce7f3; --blue:#2563eb;
+    --ink:#1e1b4b; --muted:#6b6b8a; --line:#ece8f7; --bg:#f6f3ff;
+    --ok:#15803d; --ok-bg:#dcfce7; --err:#b91c1c; --err-bg:#fee2e2;
+    --grad:linear-gradient(135deg,#6d28d9 0%,#db2777 65%,#f472b6 100%);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:'Prompt',system-ui,-apple-system,sans-serif;color:var(--ink);background:var(--bg);min-height:100vh;-webkit-font-smoothing:antialiased}
+  button,input,select{font:inherit;color:inherit}
+  .hero{background:var(--grad);color:#fff;text-align:center;padding:32px 20px 72px}
+  .hero .logo{font-size:44px;line-height:1}
+  .hero h1{margin:10px 0 6px;font-size:24px;line-height:1.3;font-weight:700}
+  .hero .prize{display:inline-block;margin-top:4px;padding:6px 14px;border-radius:999px;background:rgba(255,255,255,.18);font-size:14px}
+  .hero .prize:empty{display:none}
+  .wrap{max-width:560px;margin:-48px auto 32px;padding:0 16px}
+
+  .steps{display:flex;gap:4px;background:#fff;border-radius:18px;padding:6px;box-shadow:0 10px 30px rgba(76,29,149,.12);margin-bottom:16px}
+  .step{flex:1;text-align:center;padding:8px 2px;border-radius:13px;font-size:11.5px;line-height:1.3;color:var(--muted)}
+  .step .n{display:block;font-size:17px;font-weight:600}
+  .step.done{color:var(--purple)}
+  .step.done .n::after{content:" ✓";font-size:12px}
+  .step.on{background:var(--grad);color:#fff}
+
+  .card{background:#fff;border-radius:22px;padding:22px 20px;box-shadow:0 10px 30px rgba(76,29,149,.07);margin-bottom:16px}
+  .card h2{margin:0 0 4px;font-size:20px}
+  .sub{margin:0 0 18px;color:var(--muted);font-size:14px;line-height:1.5}
+  .label{display:block;font-size:13px;font-weight:500;color:var(--muted);margin:0 0 6px}
+
+  .row{display:flex;gap:8px}
+  input[type=text],input[type=password],select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:14px;background:#fff;outline:none;font-size:16px}
+  input:focus,select:focus{border-color:#a78bfa;box-shadow:0 0 0 3px rgba(167,139,250,.25)}
+  .btn{border:0;border-radius:14px;padding:13px 18px;font-weight:600;cursor:pointer;background:var(--grad);color:#fff;white-space:nowrap}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.block{width:100%;margin-top:14px;padding:15px}
+  .btn.ghost{background:#f1edfc;color:var(--purple)}
+  .btn.danger{background:var(--err-bg);color:var(--err)}
+  .btn.sm{padding:8px 12px;font-size:13px;border-radius:10px}
+
+  .msg{margin-top:12px;padding:10px 14px;border-radius:12px;font-size:14px;display:none}
+  .msg.ok{display:block;background:var(--ok-bg);color:var(--ok)}
+  .msg.err{display:block;background:var(--err-bg);color:var(--err)}
+
+  .you{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:var(--pink-soft);margin-bottom:16px;font-size:14px}
+  .you b{font-weight:600}
+  .you .link{margin-left:auto;background:none;border:0;color:var(--pink);font-size:13px;cursor:pointer;text-decoration:underline}
+
+  .count{display:flex;justify-content:space-between;align-items:baseline;margin:20px 0 10px}
+  .count h3{margin:0;font-size:15px}
+  .count span{font-size:13px;color:var(--muted)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px 6px 6px;border-radius:999px;background:#f5f3ff;font-size:14px}
+  .chip.me{background:var(--pink-soft);font-weight:600}
+  .chip.voted::after{content:"✓";color:var(--ok);font-weight:700;margin-left:2px}
+  .av{width:26px;height:26px;border-radius:50%;display:inline-grid;place-items:center;color:#fff;font-size:12px;font-weight:600;flex:none}
+  .empty{color:var(--muted);font-size:14px;text-align:center;padding:14px;border:1.5px dashed var(--line);border-radius:14px}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px}
+  .cand{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 8px;border:2px solid var(--line);border-radius:16px;background:#fff;cursor:pointer;text-align:center;font-size:14px;line-height:1.3;word-break:break-word;transition:transform .12s,border-color .12s}
+  .cand .av{width:46px;height:46px;font-size:18px}
+  .cand:active{transform:scale(.97)}
+  .cand.sel{border-color:var(--pink);background:var(--pink-soft);box-shadow:0 0 0 3px rgba(219,39,119,.15)}
+  .progress{height:8px;border-radius:99px;background:#f1edfc;overflow:hidden;margin-top:8px}
+  .progress i{display:block;height:100%;background:var(--grad);border-radius:99px;transition:width .4s}
+
+  .done-box{text-align:center;padding:8px 0 4px}
+  .done-box .big{font-size:48px}
+  .done-box p{margin:6px 0 0;color:var(--muted)}
+
+  .rank{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .rank:last-child{border-bottom:0}
+  .rank .pos{font-size:20px;text-align:center;font-weight:600;color:var(--muted)}
+  .rank .nm{font-weight:500;font-size:15px;word-break:break-word}
+  .rank .bar{height:8px;border-radius:99px;background:#f1edfc;margin-top:6px;overflow:hidden}
+  .rank .bar i{display:block;height:100%;background:var(--grad);border-radius:99px;width:0;transition:width .9s cubic-bezier(.2,.8,.2,1)}
+  .rank .v{font-weight:600;color:var(--purple);font-size:15px}
+  .rank.top .nm{font-weight:700}
+
+  .award{text-align:center;padding:8px 0}
+  .award .trophy{font-size:72px;line-height:1;animation:pop .8s cubic-bezier(.2,1.6,.4,1) both}
+  .award .kicker{margin:12px 0 2px;color:var(--pink);font-weight:600;letter-spacing:.06em;font-size:13px;text-transform:uppercase}
+  .award .winner{font-size:30px;font-weight:700;margin:4px 0;line-height:1.25;word-break:break-word}
+  .award .votes{color:var(--muted);font-size:14px}
+  .award .gift{display:inline-block;margin-top:14px;padding:10px 18px;border-radius:14px;background:var(--pink-soft);color:var(--pink);font-weight:600}
+  .award .gift:empty{display:none}
+  @keyframes pop{0%{transform:scale(.2) rotate(-20deg);opacity:0}100%{transform:none;opacity:1}}
+
+  .admin{border:2px solid #ddd6fe}
+  .admin h2{display:flex;align-items:center;gap:8px}
+  .admin h2 .x{margin-left:auto}
+  .phase-btns{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:16px}
+  .phase-btns button{padding:10px 4px;border-radius:12px;border:1.5px solid var(--line);background:#fff;font-size:12.5px;cursor:pointer;line-height:1.3}
+  .phase-btns button.on{background:var(--grad);border-color:transparent;color:#fff;font-weight:600}
+  .admin .field{margin-bottom:10px}
+  .admin-list{max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:12px;margin:8px 0 14px}
+  .admin-list div{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);font-size:14px}
+  .admin-list div:last-child{border-bottom:0}
+  .admin-list .rm{margin-left:auto;border:0;background:none;color:var(--err);cursor:pointer;font-size:13px}
+  .admin-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:0 16px 32px}
+  footer button{background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;font-size:12px}
+  .demo{background:#fef3c7;color:#92400e;text-align:center;font-size:13px;padding:8px 12px}
+
+  .modal{position:fixed;inset:0;background:rgba(30,27,75,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}
+  .modal.open{display:flex}
+  .modal .card{width:100%;max-width:380px;margin:0}
+  .hidden{display:none!important}
+  .loading{text-align:center;color:var(--muted);padding:24px 0}
+  .tabs{display:flex;gap:6px;background:#fff;border-radius:18px;padding:6px;box-shadow:0 10px 30px rgba(76,29,149,.12);margin-bottom:14px}
+  .tabs button{flex:1;border:0;background:none;padding:12px 6px;border-radius:13px;font-weight:500;cursor:pointer;color:var(--muted);font-size:14.5px}
+  .tabs button.on{background:var(--grad);color:#fff;font-weight:600}
+  .hero-sub{font-size:15px;opacity:.95}
+  .hero-sub:empty{display:none}
+  .info{display:grid;gap:12px;margin:12px 0 18px}
+  .info>div{display:flex;gap:12px;align-items:center;font-size:15px;line-height:1.35}
+  .info .ic{width:38px;height:38px;border-radius:12px;background:#f1edfc;display:grid;place-items:center;flex:none;font-size:18px}
+  .info small{display:block;color:var(--muted);font-size:12px}
+  .h3{margin:0 0 8px;font-size:15px}
+  .courts{display:flex;flex-wrap:wrap;gap:8px}
+  .court{min-width:62px;padding:8px 10px 10px;border-radius:14px;background:linear-gradient(160deg,#15803d,#22c55e);color:#fff;text-align:center;font-weight:700;font-size:24px;line-height:1.1;box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)}
+  .court small{display:block;font-size:10px;font-weight:500;letter-spacing:.08em;opacity:.9}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0 14px}
+  .stat{background:#f8f6ff;border-radius:14px;padding:10px 4px;text-align:center}
+  .stat b{display:block;font-size:22px;color:var(--purple)}
+  .stat span{font-size:12px;color:var(--muted)}
+  .plist{margin:0;padding:0;list-style:none}
+  .plist li{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line);font-size:15px}
+  .plist li:last-child{border-bottom:0}
+  .plist .no{width:22px;text-align:right;color:var(--muted);font-size:13px;flex:none}
+  .plist .nm{flex:1;word-break:break-word}
+  .plist .nt{color:var(--muted);font-size:12px;margin-left:6px}
+  .plist .nomatch{color:var(--muted);font-size:14px;justify-content:center}
+  .badge{font-size:12px;padding:4px 10px;border-radius:999px;white-space:nowrap;font-weight:500}
+  .badge.paid{background:var(--ok-bg);color:var(--ok)}
+  .badge.unpaid{background:#fef3c7;color:#92400e}
+  .badge.wait{background:#f1f5f9;color:#475569}
+  details.box{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+  details summary{cursor:pointer;font-weight:600;font-size:15px}
+  .notes{white-space:pre-wrap;font-size:14px;line-height:1.65;color:#3f3d5a;margin-top:10px;word-break:break-word}
+  textarea{width:100%;min-height:110px;padding:12px 14px;border:1.5px solid var(--line);border-radius:14px;font:inherit;font-size:14px;resize:vertical;outline:none}
+  textarea:focus{border-color:#a78bfa;box-shadow:0 0 0 3px rgba(167,139,250,.25)}
+  .ed-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .ed-grid .full{grid-column:1/-1}
+  .ed-grid input[type=text]{padding:10px 12px;font-size:15px}
+  .ed-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 0;border-bottom:1px solid var(--line)}
+  .ed-row .no{width:22px;text-align:right;color:var(--muted);font-size:13px}
+  .ed-row .nmi{flex:1 1 55%;min-width:120px}
+  .ed-row .nti{width:72px}
+  .ed-row input[type=text],.ed-row select{padding:8px 10px;font-size:14px;border-radius:10px}
+  .ed-row select{width:auto}
+  .ed-row label{font-size:13px;display:flex;align-items:center;gap:4px;white-space:nowrap;margin-left:28px}
+  .ed-row .rm{margin-left:auto;border:0;background:none;color:var(--err);cursor:pointer;font-size:13px;padding:6px}
+  .dirty{color:#b45309;font-size:13px;font-weight:500}
+  canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+</style>
+</head>
+<body>
+<div id="demoBar" class="demo hidden">⚠️ Demo mode — ข้อมูลเก็บในเครื่องนี้เท่านั้น (ยังไม่ได้ใส่ API_URL) · รหัสแอดมินตอนทดสอบ: <b>admin</b></div>
+
+<header class="hero">
+  <div class="logo">🏸</div>
+  <h1 id="title">Bangkok Badminton Friends</h1>
+  <div class="hero-sub" id="heroSub"></div>
+  <div class="prize" id="prizeTop"></div>
+</header>
+
+<main class="wrap">
+  <nav class="tabs" id="tabs">
+    <button data-v="session" type="button">📅 สัปดาห์นี้ · This week</button>
+    <button data-v="vote" type="button">🗳️ โหวต · Vote</button>
+  </nav>
+
+  <div class="card loading" id="loading">กำลังโหลด… · Loading…</div>
+
+  <!-- ===== Weekly session view ===== -->
+  <div id="viewSession" class="hidden">
+    <section class="card admin hidden" id="sessAdmin">
+      <h2>⚙️ จัดการรอบนี้ <span class="dirty hidden" id="dirtyTag">● ยังไม่บันทึก</span><button class="btn ghost sm x" id="adminLogout2" type="button">ออก · Exit</button></h2>
+      <details class="box" id="importBox" open style="margin-top:6px">
+        <summary>📋 วางข้อความประกาศจาก LINE</summary>
+        <p class="sub" style="margin:8px 0">วางประกาศทั้งก้อน ระบบจะแยกวัน เวลา คอร์ด ราคา และรายชื่อให้ ชื่อที่มี ✅ ถือว่าจ่ายแล้ว ตรวจก่อนแล้วค่อยกดบันทึก</p>
+        <textarea id="importText" placeholder="📣📣 Saturday Social Badminton – Confirmed for Tomorrow!&#10;📍 Beat Discovery&#10;🗓️ Sat, Nov 28 | 1-3 PM&#10;🏸 Court No. 1, 2, 3&#10;…&#10;✍️ Sign up (Confirmed)&#10;1. Alisara ✅"></textarea>
+        <button class="btn sm" id="importBtn" type="button" style="margin-top:8px">แปลงข้อความ · Parse</button>
+      </details>
+      <div class="ed-grid" style="margin-top:16px">
+        <div class="full"><label class="label" for="f_title">หัวข้อ · Title</label><input type="text" id="f_title" data-k="title" maxlength="120"></div>
+        <div><label class="label" for="f_date">วันที่ · Date</label><input type="text" id="f_date" data-k="date" maxlength="60" placeholder="Sat, Nov 28"></div>
+        <div><label class="label" for="f_time">เวลา · Time</label><input type="text" id="f_time" data-k="time" maxlength="60" placeholder="1-3 PM"></div>
+        <div><label class="label" for="f_venue">สถานที่ · Venue</label><input type="text" id="f_venue" data-k="venue" maxlength="120"></div>
+        <div><label class="label" for="f_courts">คอร์ด · Courts</label><input type="text" id="f_courts" data-k="courts" maxlength="120" placeholder="1, 2, 3, 5, 6"></div>
+        <div class="full"><label class="label" for="f_price">ค่าใช้จ่าย · Fee</label><input type="text" id="f_price" data-k="price" maxlength="200"></div>
+        <div class="full"><label class="label" for="f_notes">รายละเอียด / กติกา · Notes</label><textarea id="f_notes" data-k="notes" maxlength="3000"></textarea></div>
+      </div>
+      <div class="count"><h3>รายชื่อ · Players</h3><span id="edCount"></span></div>
+      <div id="edRows"></div>
+      <form class="row" id="edAddForm" style="margin-top:10px" autocomplete="off">
+        <input type="text" id="edAddName" placeholder="เพิ่มชื่อ · Add name" maxlength="60">
+        <button class="btn sm" type="submit">+ เพิ่ม</button>
+      </form>
+      <div class="admin-actions" style="margin-top:16px">
+        <button class="btn" id="edSave" type="button">💾 บันทึก · Save</button>
+        <button class="btn ghost" id="edDiscard" type="button">ยกเลิกที่แก้</button>
+        <button class="btn danger sm" id="edClear" type="button">ล้างรายชื่อ (สัปดาห์ใหม่)</button>
+      </div>
+      <div class="msg" id="edMsg"></div>
+    </section>
+
+    <section class="card hidden" id="sessEmpty">
+      <div class="done-box"><div class="big">🏸</div><h2>ยังไม่มีรอบของสัปดาห์นี้</h2><p>No session posted yet. Check back soon!</p></div>
+    </section>
+
+    <section class="card hidden" id="sessCard">
+      <h2 id="sTitle"></h2>
+      <div class="info">
+        <div id="sWhenRow"><span class="ic">🗓️</span><div><small>วัน-เวลา · When</small><span id="sWhen"></span></div></div>
+        <div id="sVenueRow"><span class="ic">📍</span><div><small>สถานที่ · Where</small><span id="sVenue"></span></div></div>
+        <div id="sPriceRow"><span class="ic">🎟️</span><div><small>ค่าใช้จ่าย · Fee</small><span id="sPrice"></span></div></div>
+      </div>
+      <div id="sCourtsWrap">
+        <h3 class="h3">🏸 คอร์ดวันนี้ · Courts</h3>
+        <div class="courts" id="sCourts"></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><b id="stConf">0</b><span>ยืนยัน · Confirmed</span></div>
+        <div class="stat"><b id="stPaid">0</b><span>จ่ายแล้ว · Paid</span></div>
+        <div class="stat"><b id="stWait">0</b><span>รอคิว · Waiting</span></div>
+      </div>
+      <input type="text" id="sSearch" placeholder="🔍 หาชื่อตัวเอง · Find your name" aria-label="Find your name">
+      <div class="count"><h3>✍️ ยืนยันแล้ว · Confirmed</h3><span id="sConfCount"></span></div>
+      <ul class="plist" id="sConf"></ul>
+      <div id="sWaitWrap">
+        <div class="count"><h3>⏳ รอคิว · Waiting list</h3><span id="sWaitCount"></span></div>
+        <ul class="plist" id="sWait"></ul>
+      </div>
+      <details class="box" id="sNotesBox"><summary>📌 รายละเอียด & กติกา · Details</summary><div class="notes" id="sNotes"></div></details>
+    </section>
+  </div>
+
+  <!-- ===== Vote view ===== -->
+  <div id="viewVote" class="hidden">
+  <nav class="steps" id="steps">
+    <div class="step" data-p="signup"><span class="n">1</span>ลงชื่อ<br>Sign up</div>
+    <div class="step" data-p="vote"><span class="n">2</span>โหวต<br>Vote</div>
+    <div class="step" data-p="results"><span class="n">3</span>ประกาศผล<br>Results</div>
+    <div class="step" data-p="award"><span class="n">4</span>มอบรางวัล<br>Award</div>
+  </nav>
+
+  <!-- Admin panel -->
+  <section class="card admin hidden" id="adminPanel">
+    <h2>⚙️ Admin <button class="btn ghost sm x" id="adminLogout">ออก · Exit</button></h2>
+    <p class="sub">กดเพื่อเปลี่ยนช่วง ทุกคนจะเห็นช่วงใหม่ภายในไม่กี่วินาที</p>
+    <div class="phase-btns" id="phaseBtns">
+      <button data-p="signup">1 ลงชื่อ</button>
+      <button data-p="vote">2 โหวต</button>
+      <button data-p="results">3 ประกาศผล</button>
+      <button data-p="award">4 มอบรางวัล</button>
+    </div>
+    <div class="field"><label class="label" for="aTitle">หัวข้อ · Title</label><input type="text" id="aTitle" maxlength="80"></div>
+    <div class="field"><label class="label" for="aPrize">รางวัล · Prize</label><input type="text" id="aPrize" maxlength="120" placeholder="เช่น ไม้แบด Yonex 1 อัน"></div>
+    <button class="btn sm" id="aSave">บันทึก · Save</button>
+    <div class="count"><h3>รายชื่อ · Participants</h3><span id="aCount"></span></div>
+    <div class="admin-list" id="aList"></div>
+    <div class="admin-actions">
+      <button class="btn danger sm" id="aResetVotes">ล้างผลโหวต</button>
+      <button class="btn danger sm" id="aResetAll">เริ่มใหม่ทั้งหมด</button>
+    </div>
+    <div class="msg" id="aMsg"></div>
+  </section>
+
+  <!-- 1. Sign up -->
+  <section class="card hidden" id="pSignup">
+    <h2>ลงชื่อเพื่อลุ้นรางวัล</h2>
+    <p class="sub">Sign up to be in the running. ใส่ชื่อที่เพื่อนๆ ในก๊วนรู้จัก</p>
+    <div class="you hidden" id="youSignup"></div>
+    <form class="row" id="signupForm" autocomplete="off">
+      <input type="text" id="nameInput" maxlength="40" placeholder="ชื่อของคุณ · Your name" aria-label="Your name">
+      <button class="btn" id="signupBtn" type="submit">ลงชื่อ</button>
+    </form>
+    <div class="msg" id="signupMsg"></div>
+    <div class="count"><h3>ลงชื่อแล้ว · Joined</h3><span id="signupCount"></span></div>
+    <div class="chips" id="signupList"></div>
+  </section>
+
+  <!-- 2. Vote -->
+  <section class="card hidden" id="pVote">
+    <h2>โหวตได้แล้ว!</h2>
+    <p class="sub">Vote for one person. โหวตได้คนละ 1 ครั้ง โหวตตัวเองไม่ได้ และเปลี่ยนไม่ได้นะ</p>
+    <div id="voteForm">
+      <label class="label" for="voterSel">ฉันคือ · I am</label>
+      <select id="voterSel"></select>
+      <div id="candWrap" class="hidden">
+        <div class="count"><h3>โหวตให้ · Vote for</h3><span></span></div>
+        <div class="grid" id="candGrid"></div>
+        <button class="btn block" id="voteBtn" disabled>ยืนยันโหวต · Submit vote</button>
+      </div>
+    </div>
+    <div class="done-box hidden" id="voteDone">
+      <div class="big">🗳️</div>
+      <h2 id="voteDoneTitle">โหวตเรียบร้อย!</h2>
+      <p id="voteDoneSub">รอประกาศผลได้เลย · Results coming soon</p>
+      <button class="btn ghost sm" id="otherVoter" type="button" style="margin-top:14px">โหวตในชื่อคนอื่น (ใช้เครื่องเดียวกัน)</button>
+    </div>
+    <div class="msg" id="voteMsg"></div>
+    <div class="count"><h3>โหวตแล้ว · Voted</h3><span id="voteCount"></span></div>
+    <div class="progress"><i id="voteBar" style="width:0"></i></div>
+    <p class="sub hidden" id="noVoterHint" style="margin:14px 0 0">ถ้าไม่มีชื่อในรายการ ให้แจ้งแอดมิน · Not on the list? Ask the admin.</p>
+  </section>
+
+  <!-- 3. Results -->
+  <section class="card hidden" id="pResults">
+    <h2>📣 ประกาศผล</h2>
+    <p class="sub" id="resultsSub">Results</p>
+    <div id="rankList"></div>
+  </section>
+
+  <!-- 4. Award -->
+  <section class="card hidden" id="pAward">
+    <div class="award">
+      <div class="trophy">🏆</div>
+      <div class="kicker" id="awardKicker">Winner</div>
+      <div class="winner" id="awardName"></div>
+      <div class="votes" id="awardVotes"></div>
+      <div class="gift" id="awardPrize"></div>
+    </div>
+  </section>
+  <section class="card hidden" id="pAwardRank">
+    <h2>ผลทั้งหมด · Full results</h2>
+    <div id="rankList2" style="margin-top:8px"></div>
+  </section>
+  </div>
+</main>
+
+<footer>
+  อัปเดตอัตโนมัติทุก 8 วินาที · Auto-refreshes
+  <br><button id="adminOpen">Admin</button>
+</footer>
+
+<div class="modal" id="adminModal" role="dialog" aria-modal="true" aria-labelledby="amTitle">
+  <div class="card">
+    <h2 id="amTitle">เข้าโหมดแอดมิน</h2>
+    <p class="sub">Admin password</p>
+    <form id="adminForm"><input type="password" id="pwInput" placeholder="รหัสผ่าน" autocomplete="current-password">
+      <div class="row" style="margin-top:12px"><button type="button" class="btn ghost" id="adminCancel" style="flex:1">ยกเลิก</button><button class="btn" type="submit" style="flex:1">เข้าสู่ระบบ</button></div>
+    </form>
+    <div class="msg" id="pwMsg"></div>
+  </div>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<script>
+/* =====================================================================
+   ⚙️ ตั้งค่า: วาง Web app URL จาก Google Apps Script ตรงนี้
+   ถ้าเว้นว่างไว้ หน้าเว็บจะทำงานใน Demo mode (เก็บข้อมูลในเครื่องเท่านั้น)
+   ===================================================================== */
+const API_URL = '';
+const POLL_MS = 8000;
+const GROUP_NAME = 'Bangkok Badminton Friends'; // ชื่อก๊วนที่โชว์ด้านบน
+
+/* ---------- Core logic (same as Code.gs) — used only in demo mode ---------- */
+const PHASES = ['signup', 'vote', 'results', 'award'];
+function core(d, action, p, adminPassword) {
+  p = p || {};
+  const norm = s => String(s == null ? '' : s).trim().replace(/\s+/g, ' ');
+  const err = m => ({ ok: false, error: m });
+  const byId = id => d.people.find(x => x.id === id);
+  const newId = () => Math.random().toString(36).slice(2, 10);
+  const ok = extra => Object.assign({ ok: true, state: publicState(d) }, extra || {});
+  switch (action) {
+    case 'state': return ok();
+    case 'signup': {
+      if (d.phase !== 'signup') return err('ปิดรับลงชื่อแล้ว · Sign-up is closed');
+      const name = norm(p.name).slice(0, 40);
+      if (!name) return err('กรุณาใส่ชื่อ · Please enter your name');
+      const found = d.people.find(x => x.name.toLowerCase() === name.toLowerCase());
+      if (found) return ok({ id: found.id, existed: true });
+      if (d.people.length >= 300) return err('รายชื่อเต็มแล้ว · List is full');
+      const id = newId();
+      d.people.push({ id: id, name: name, at: Date.now() });
+      return ok({ id: id, changed: true });
+    }
+    case 'vote': {
+      if (d.phase !== 'vote') return err('ยังไม่เปิดโหวต หรือปิดโหวตแล้ว · Voting is not open');
+      const voter = byId(p.voter), cand = byId(p.candidate);
+      if (!voter) return err('ไม่พบชื่อคุณในรายชื่อ · Your name is not on the list');
+      if (!cand) return err('ไม่พบคนที่เลือก · Candidate not found');
+      if (voter.id === cand.id) return err('โหวตตัวเองไม่ได้นะ · You can\'t vote for yourself');
+      if (d.votes.some(v => v.voter === voter.id)) return err('ชื่อนี้โหวตไปแล้ว · This name has already voted');
+      d.votes.push({ voter: voter.id, candidate: cand.id, at: Date.now() });
+      return ok({ changed: true });
+    }
+    case 'admin': {
+      if (!p.password || p.password !== adminPassword) return err('รหัสแอดมินไม่ถูกต้อง · Wrong password');
+      switch (p.op) {
+        case 'check': return ok();
+        case 'setPhase':
+          if (PHASES.indexOf(p.phase) < 0) return err('Unknown phase');
+          d.phase = p.phase; return ok({ changed: true });
+        case 'setInfo':
+          d.title = norm(p.title).slice(0, 80) || d.title;
+          d.prize = norm(p.prize).slice(0, 120);
+          return ok({ changed: true });
+        case 'remove':
+          d.people = d.people.filter(x => x.id !== p.id);
+          d.votes = d.votes.filter(v => v.voter !== p.id && v.candidate !== p.id);
+          return ok({ changed: true });
+        case 'resetVotes': d.votes = []; return ok({ changed: true });
+        case 'resetAll': d.people = []; d.votes = []; d.phase = 'signup'; return ok({ changed: true });
+        default: return err('Unknown admin op');
+      }
+    }
+    default: return err('Unknown action');
+  }
+}
+function publicState(d) {
+  const showResults = d.phase === 'results' || d.phase === 'award';
+  let results = null;
+  if (showResults) {
+    const count = {};
+    d.votes.forEach(v => { count[v.candidate] = (count[v.candidate] || 0) + 1; });
+    results = d.people.map(x => ({ id: x.id, name: x.name, votes: count[x.id] || 0 }))
+      .sort((a, b) => b.votes - a.votes || a.name.localeCompare(b.name));
+  }
+  return { phase: d.phase, title: d.title, prize: d.prize,
+    people: d.people.map(x => ({ id: x.id, name: x.name })),
+    voted: d.votes.map(v => v.voter), totalVotes: d.votes.length, results: results };
+}
+
+/* ---------- API ---------- */
+const DEMO = !API_URL;
+const store = {
+  get(k, s) { try { return (s ? sessionStorage : localStorage).getItem(k) || ''; } catch (e) { return ''; } },
+  set(k, v, s) { try { (s ? sessionStorage : localStorage).setItem(k, v); } catch (e) {} },
+  del(k, s) { try { (s ? sessionStorage : localStorage).removeItem(k); } catch (e) {} }
+};
+async function call(action, payload) {
+  payload = payload || {};
+  if (DEMO) {
+    let d; try { d = JSON.parse(store.get('bbf.demo')); } catch (e) {}
+    d = d || { phase: 'signup', title: 'MVP of the Day', prize: '', people: [], votes: [], session: {}, roster: [] };
+    const res = core(d, action, JSON.parse(JSON.stringify(payload)), 'admin');
+    if (res.changed) store.set('bbf.demo', JSON.stringify(d));
+    delete res.changed;
+    await new Promise(r => setTimeout(r, 150));
+    return res;
+  }
+  try {
+    const r = action === 'state'
+      ? await fetch(API_URL + '?action=state&t=' + Date.now(), { cache: 'no-store' })
+      : await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(Object.assign({ action: action }, payload)) });
+    return await r.json();
+  } catch (e) {
+    return { ok: false, error: 'เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง · Connection problem, please retry' };
+  }
+}
+
+/* ---------- Helpers ---------- */
+const $ = id => document.getElementById(id);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const COLORS = ['#7c3aed', '#db2777', '#2563eb', '#0891b2', '#ea580c', '#16a34a', '#9333ea', '#e11d48'];
+function avatar(name, id) {
+  let h = 0; for (const c of String(id || name)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  const a = el('span', 'av', (Array.from(String(name).trim())[0] || '?').toUpperCase());
+  a.style.background = COLORS[h % COLORS.length];
+  return a;
+}
+function msg(id, text, kind) { const m = $(id); m.textContent = text || ''; m.className = 'msg' + (text ? ' ' + (kind || 'err') : ''); }
+function show(id, on) { $(id).classList.toggle('hidden', !on); }
+
+/* ---------- State ---------- */
+let S = null, lastJSON = '', selected = '', adminPw = store.get('bbf.pw', true);
+let myId = store.get('bbf.myId');
+let view = location.hash === '#vote' ? 'vote' : 'session';
+let confettiShownFor = '';
+
+async function refresh() {
+  const res = await call('state');
+  if (res.ok) apply(res.state);
+  else if (!S) { $('loading').textContent = res.error || 'โหลดไม่สำเร็จ'; }
+}
+function apply(state) {
+  const j = JSON.stringify(state);
+  if (j === lastJSON) return;
+  lastJSON = j; S = state;
+  if (myId && !S.people.some(p => p.id === myId)) { myId = ''; store.del('bbf.myId'); }
+  render();
+}
+
+/* ---------- Render ---------- */
+function render() {
+  show('loading', false);
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.v === view));
+  show('viewSession', view === 'session');
+  show('viewVote', view === 'vote');
+  $('title').textContent = GROUP_NAME;
+  const ses = S.session || {};
+  $('heroSub').textContent = view === 'vote' ? S.title : (ses.title ? '' : 'Saturday Social Badminton');
+  $('prizeTop').textContent = view === 'vote' && S.prize ? '🎁 ' + S.prize : '';
+  document.title = GROUP_NAME + ' 🏸';
+  renderSession();
+  renderEditor();
+
+  const idx = PHASES.indexOf(S.phase);
+  document.querySelectorAll('#steps .step').forEach((s, i) => {
+    s.classList.toggle('on', i === idx); s.classList.toggle('done', i < idx);
+  });
+  show('pSignup', S.phase === 'signup');
+  show('pVote', S.phase === 'vote');
+  show('pResults', S.phase === 'results');
+  show('pAward', S.phase === 'award');
+  show('pAwardRank', S.phase === 'award');
+
+  if (S.phase === 'signup') renderSignup();
+  if (S.phase === 'vote') renderVote();
+  if (S.phase === 'results') renderRank($('rankList'), true);
+  if (S.phase === 'award') renderAward();
+  renderAdmin();
+}
+
+function renderSignup() {
+  const me = S.people.find(p => p.id === myId);
+  const you = $('youSignup');
+  you.replaceChildren();
+  if (me) {
+    you.append(el('span', null, '✅'), el('span', null, 'ลงชื่อแล้วในชื่อ '));
+    you.lastChild.append(el('b', null, me.name));
+    const b = el('button', 'link', 'ไม่ใช่ฉัน'); b.type = 'button';
+    b.onclick = () => { myId = ''; store.del('bbf.myId'); render(); };
+    you.append(b);
+  }
+  show('youSignup', !!me);
+  show('signupForm', !me);
+  $('signupCount').textContent = S.people.length + ' คน · people';
+  const list = $('signupList'); list.replaceChildren();
+  if (!S.people.length) list.append(el('div', 'empty', 'ยังไม่มีใครลงชื่อ เป็นคนแรกเลย! · Be the first!'));
+  S.people.forEach(p => {
+    const c = el('span', 'chip' + (p.id === myId ? ' me' : ''));
+    c.append(avatar(p.name, p.id), document.createTextNode(p.name));
+    list.append(c);
+  });
+}
+
+function renderVote() {
+  const sel = $('voterSel');
+  const prev = sel.value || myId;
+  sel.replaceChildren();
+  const ph = el('option', null, '— เลือกชื่อของคุณ · Choose your name —'); ph.value = '';
+  sel.append(ph);
+  S.people.forEach(p => {
+    const o = el('option', null, p.name + (S.voted.includes(p.id) ? '  ✓ โหวตแล้ว' : ''));
+    o.value = p.id; o.disabled = S.voted.includes(p.id) && p.id !== prev;
+    sel.append(o);
+  });
+  sel.value = S.people.some(p => p.id === prev) ? prev : '';
+  show('noVoterHint', true);
+
+  const voter = sel.value;
+  const hasVoted = voter && S.voted.includes(voter);
+  show('voteForm', !hasVoted);
+  show('voteDone', !!hasVoted);
+  if (hasVoted) {
+    const forId = store.get('bbf.votedFor.' + voter);
+    const forP = S.people.find(p => p.id === forId);
+    $('voteDoneSub').textContent = forP ? 'คุณโหวตให้ ' + forP.name + ' · รอประกาศผลได้เลย' : 'รอประกาศผลได้เลย · Results coming soon';
+  }
+  show('candWrap', !!voter && !hasVoted);
+  if (selected && (!S.people.some(p => p.id === selected) || selected === voter)) selected = '';
+  const grid = $('candGrid'); grid.replaceChildren();
+  S.people.filter(p => p.id !== voter).forEach(p => {
+    const b = el('button', 'cand' + (p.id === selected ? ' sel' : '')); b.type = 'button';
+    b.append(avatar(p.name, p.id), el('span', null, p.name));
+    b.onclick = () => { selected = p.id; renderVote(); };
+    grid.append(b);
+  });
+  $('voteBtn').disabled = !selected;
+  const n = S.people.length, v = S.voted.length;
+  $('voteCount').textContent = v + ' / ' + n + ' คน';
+  $('voteBar').style.width = (n ? Math.round(v / n * 100) : 0) + '%';
+}
+
+function renderRank(box, animate) {
+  box.replaceChildren();
+  const R = S.results || [];
+  if (!R.length) { box.append(el('div', 'empty', 'ยังไม่มีผลโหวต · No votes yet')); return; }
+  $('resultsSub').textContent = 'จากทั้งหมด ' + S.totalVotes + ' โหวต · ' + S.totalVotes + ' votes in total';
+  const max = Math.max(1, R[0].votes);
+  const medals = ['🥇', '🥈', '🥉'];
+  let rank = 0, prevVotes = null;
+  R.forEach((r, i) => {
+    if (r.votes !== prevVotes) { rank = i + 1; prevVotes = r.votes; }
+    const row = el('div', 'rank' + (rank === 1 && r.votes > 0 ? ' top' : ''));
+    row.append(el('div', 'pos', r.votes > 0 && rank <= 3 ? medals[rank - 1] : String(rank)));
+    const mid = el('div'); mid.append(el('div', 'nm', r.name));
+    const bar = el('div', 'bar'), fill = el('i'); bar.append(fill); mid.append(bar);
+    row.append(mid, el('div', 'v', r.votes + ' โหวต'));
+    box.append(row);
+    const w = Math.round(r.votes / max * 100) + '%';
+    if (animate) requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = w; }));
+    else fill.style.width = w;
+  });
+}
+
+function renderAward() {
+  const R = S.results || [];
+  const topVotes = R.length ? R[0].votes : 0;
+  const winners = topVotes > 0 ? R.filter(r => r.votes === topVotes) : [];
+  $('awardKicker').textContent = winners.length > 1 ? 'Winners · ผู้ชนะร่วม' : 'Winner · ผู้ชนะ';
+  $('awardName').textContent = winners.length ? winners.map(w => w.name).join(' & ') : 'ยังไม่มีผู้ชนะ';
+  $('awardVotes').textContent = winners.length ? topVotes + ' โหวต · votes' : '';
+  $('awardPrize').textContent = S.prize ? '🎁 ' + S.prize : '';
+  renderRank($('rankList2'), true);
+  const key = winners.map(w => w.id).join(',');
+  if (winners.length && confettiShownFor !== key) { confettiShownFor = key; confetti(); }
+}
+
+/* ---------- Admin ---------- */
+/* ---------- Weekly session (viewer) ---------- */
+function courtList(s) {
+  return String(s || '').split(/\s*(?:,|&|\/|\band\b|และ)\s*|\s+/i).map(x => x.trim()).filter(Boolean);
+}
+function personRow(r, no) {
+  const li = el('li');
+  li.append(el('span', 'no', no ? no + '.' : ''));
+  const nm = el('span', 'nm', r.name);
+  if (r.note) nm.append(el('span', 'nt', r.note));
+  li.append(nm);
+  if (r.status === 'waiting') li.append(el('span', 'badge wait', 'รอคิว'));
+  else li.append(el('span', 'badge ' + (r.paid ? 'paid' : 'unpaid'), r.paid ? '✅ จ่ายแล้ว' : '⏳ รอจ่าย'));
+  return li;
+}
+function renderSession() {
+  const ses = S.session || {}, roster = S.roster || [];
+  const has = !!(ses.title || ses.date || ses.courts || roster.length);
+  show('sessEmpty', !has); show('sessCard', has);
+  if (!has) return;
+  $('sTitle').textContent = ses.title || 'Saturday Social Badminton';
+  $('sWhen').textContent = [ses.date, ses.time].filter(Boolean).join(' · ');
+  show('sWhenRow', !!(ses.date || ses.time));
+  $('sVenue').textContent = ses.venue || ''; show('sVenueRow', !!ses.venue);
+  $('sPrice').textContent = ses.price || ''; show('sPriceRow', !!ses.price);
+  const cs = courtList(ses.courts), box = $('sCourts'); box.replaceChildren();
+  cs.forEach(c => { const d = el('div', 'court'); d.append(el('small', null, 'COURT'), document.createTextNode(c)); box.append(d); });
+  show('sCourtsWrap', cs.length > 0);
+
+  const conf = roster.filter(r => r.status !== 'waiting'), wait = roster.filter(r => r.status === 'waiting');
+  $('stConf').textContent = conf.length;
+  $('stPaid').textContent = conf.filter(r => r.paid).length;
+  $('stWait').textContent = wait.length;
+  const q = $('sSearch').value.trim().toLowerCase();
+  const fill = (ul, list) => {
+    ul.replaceChildren();
+    let shown = 0;
+    list.forEach((r, i) => { if (!q || r.name.toLowerCase().includes(q)) { ul.append(personRow(r, i + 1)); shown++; } });
+    if (!list.length) ul.append(el('li', 'nomatch', 'ยังไม่มีรายชื่อ · No one yet'));
+    else if (!shown) ul.append(el('li', 'nomatch', 'ไม่พบชื่อนี้ · Not found'));
+  };
+  fill($('sConf'), conf); fill($('sWait'), wait);
+  $('sConfCount').textContent = conf.length + ' คน';
+  $('sWaitCount').textContent = wait.length + ' คน';
+  show('sWaitWrap', wait.length > 0);
+  $('sNotes').textContent = ses.notes || ''; show('sNotesBox', !!ses.notes);
+}
+
+/* ---------- Weekly session (admin editor) ---------- */
+const SES_KEYS = ['title', 'date', 'time', 'venue', 'courts', 'price', 'notes'];
+let draft = null, dirty = false;
+function loadDraft() {
+  const s = S.session || {};
+  draft = { session: {}, roster: (S.roster || []).map(r => Object.assign({}, r)) };
+  SES_KEYS.forEach(k => { draft.session[k] = s[k] || ''; });
+  dirty = false;
+}
+function markDirty() { dirty = true; show('dirtyTag', true); }
+function renderEditor() {
+  const on = !!adminPw && view === 'session';
+  show('sessAdmin', on);
+  if (!on) return;
+  if (!draft || !dirty) { loadDraft(); fillEditor(); }
+}
+function fillEditor() {
+  show('dirtyTag', dirty);
+  SES_KEYS.forEach(k => { $('f_' + k).value = draft.session[k] || ''; });
+  fillRows();
+}
+function fillRows() {
+  const box = $('edRows'); box.replaceChildren();
+  const conf = draft.roster.filter(r => r.status !== 'waiting').length;
+  $('edCount').textContent = conf + ' ยืนยัน · ' + draft.roster.filter(r => r.status !== 'waiting' && r.paid).length + ' จ่ายแล้ว · ' + (draft.roster.length - conf) + ' รอคิว';
+  if (!draft.roster.length) box.append(el('div', 'empty', 'ยังไม่มีรายชื่อ วางข้อความด้านบนหรือเพิ่มชื่อด้านล่าง'));
+  draft.roster.forEach((r, i) => {
+    const row = el('div', 'ed-row');
+    row.append(el('span', 'no', (i + 1) + '.'));
+    const nm = el('input', 'nmi'); nm.type = 'text'; nm.value = r.name; nm.maxLength = 60; nm.setAttribute('aria-label', 'Name');
+    nm.oninput = () => { r.name = nm.value; markDirty(); };
+    const nt = el('input', 'nti'); nt.type = 'text'; nt.value = r.note || ''; nt.maxLength = 30; nt.placeholder = 'note'; nt.setAttribute('aria-label', 'Note');
+    nt.oninput = () => { r.note = nt.value; markDirty(); };
+    const lb = el('label'), cb = el('input'); cb.type = 'checkbox'; cb.checked = !!r.paid;
+    cb.onchange = () => { r.paid = cb.checked; markDirty(); fillRows(); };
+    lb.append(cb, document.createTextNode('จ่ายแล้ว'));
+    const st = el('select');
+    [['confirmed', 'ยืนยัน'], ['waiting', 'รอคิว']].forEach(([v, t]) => { const o = el('option', null, t); o.value = v; st.append(o); });
+    st.value = r.status === 'waiting' ? 'waiting' : 'confirmed';
+    st.onchange = () => { r.status = st.value; markDirty(); fillRows(); };
+    const rm = el('button', 'rm', 'ลบ'); rm.type = 'button';
+    rm.onclick = () => { draft.roster.splice(i, 1); markDirty(); fillRows(); };
+    row.append(nm, nt, lb, st, rm);
+    box.append(row);
+  });
+}
+
+/* Parse a LINE-style announcement into session fields + roster */
+function parseAnnouncement(text) {
+  const clean = s => s.replace(/[​-‍⁠﻿]/g, '').trim();
+  const lead = /^[\p{Extended_Pictographic}️⃣‍\s•·\-–—*]+/u;
+  const out = { session: { title: '', date: '', time: '', venue: '', courts: '', price: '', notes: '' }, roster: [] };
+  const notes = [];
+  let mode = 'head';
+  const add = t => {
+    t = t.trim(); if (!t) return;
+    let name = t, note = '', paid = false;
+    const i = t.indexOf('✅');
+    if (i >= 0) { paid = true; name = t.slice(0, i).trim(); note = t.slice(i + 1).replace(/✅/g, '').trim(); }
+    if (!name) return;
+    out.roster.push({ id: '', name: name, note: note, status: mode === 'waiting' ? 'waiting' : 'confirmed', paid: mode === 'waiting' ? false : paid });
+  };
+  String(text || '').split(/\r?\n/).forEach(raw0 => {
+    const raw = clean(raw0);
+    if (!raw) { if (mode === 'head') notes.push(''); return; }
+    const line = raw.replace(lead, '').trim();
+    const num = line.match(/^\d+\s*[.)]\s*(.*)$/);
+    if (mode !== 'head' && num) { add(num[1]); return; }
+    if (/waiting/i.test(line) || /รอคิว|สำรอง/.test(line)) { mode = 'waiting'; return; }
+    if (/sign\s*-?\s*up/i.test(line) || /^(confirmed|รายชื่อ)/i.test(line)) { mode = 'confirmed'; return; }
+    if (mode !== 'head') return;
+    if (!out.session.title) { out.session.title = line; return; }
+    if (/📍/.test(raw) && !out.session.venue) { out.session.venue = line; return; }
+    if ((/🗓|📅/.test(raw) || /^(mon|tue|wed|thu|fri|sat|sun)/i.test(line)) && !out.session.date) {
+      const parts = line.split('|').map(x => x.trim());
+      out.session.date = parts[0]; out.session.time = parts.slice(1).join(' ').trim(); return;
+    }
+    const c = line.match(/(?:courts?|คอร์ท|คอร์ด|สนาม)\s*(?:no\.?|#|ที่)?\s*:?\s*([\d][\d\s,&/และand-]*)/i);
+    if (c && !out.session.courts) { out.session.courts = c[1].trim().replace(/[,&\s-]+$/, ''); return; }
+    if (/thb|บาท|฿/i.test(line) && !out.session.price) { out.session.price = line; return; }
+    notes.push(raw);
+  });
+  out.session.notes = notes.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  return out;
+}
+
+function renderAdmin() {
+  const on = !!adminPw && view === 'vote';
+  show('adminPanel', on);
+  if (!on || !S) return;
+  document.querySelectorAll('#phaseBtns button').forEach(b => b.classList.toggle('on', b.dataset.p === S.phase));
+  if (document.activeElement !== $('aTitle')) $('aTitle').value = S.title;
+  if (document.activeElement !== $('aPrize')) $('aPrize').value = S.prize;
+  $('aCount').textContent = S.people.length + ' คน · โหวตแล้ว ' + S.voted.length;
+  const list = $('aList'); list.replaceChildren();
+  if (!S.people.length) list.append(el('div', null, 'ยังไม่มีรายชื่อ'));
+  S.people.forEach(p => {
+    const row = el('div');
+    row.append(avatar(p.name, p.id), el('span', null, p.name + (S.voted.includes(p.id) ? '  ✓' : '')));
+    const rm = el('button', 'rm', 'ลบ'); rm.type = 'button';
+    rm.onclick = () => { if (confirm('ลบ "' + p.name + '" และโหวตที่เกี่ยวข้อง?')) admin('remove', { id: p.id }); };
+    row.append(rm); list.append(row);
+  });
+}
+async function admin(op, extra, msgId) {
+  msgId = msgId || 'aMsg';
+  msg(msgId, '');
+  const res = await call('admin', Object.assign({ password: adminPw, op: op }, extra || {}));
+  if (res.ok) { apply(res.state); msg(msgId, 'บันทึกแล้ว · Saved', 'ok'); setTimeout(() => msg(msgId, ''), 2200); }
+  else { msg(msgId, res.error); if (/password/i.test(res.error || '')) logout(); }
+  return res;
+}
+function logout() { adminPw = ''; store.del('bbf.pw', true); draft = null; dirty = false; renderAdmin(); renderEditor(); }
+
+/* Session editor events */
+SES_KEYS.forEach(k => { $('f_' + k).oninput = e => { draft.session[k] = e.target.value; markDirty(); }; });
+$('importBtn').onclick = () => {
+  const p = parseAnnouncement($('importText').value);
+  const filled = SES_KEYS.some(k => p.session[k]) || p.roster.length;
+  if (!filled) { msg('edMsg', 'อ่านข้อความไม่ออก ลองวางใหม่อีกครั้ง'); return; }
+  draft = p; markDirty(); fillEditor();
+  const conf = p.roster.filter(r => r.status !== 'waiting');
+  msg('edMsg', 'แปลงแล้ว: ยืนยัน ' + conf.length + ' คน (จ่ายแล้ว ' + conf.filter(r => r.paid).length + ') · รอคิว ' + (p.roster.length - conf.length) + ' คน ตรวจแล้วกดบันทึก', 'ok');
+};
+$('edAddForm').onsubmit = e => {
+  e.preventDefault();
+  const n = $('edAddName').value.trim(); if (!n) return;
+  draft.roster.push({ id: '', name: n, note: '', status: 'confirmed', paid: false });
+  $('edAddName').value = ''; markDirty(); fillRows();
+};
+$('edSave').onclick = async () => {
+  $('edSave').disabled = true;
+  const res = await admin('saveSession', { session: draft.session, roster: draft.roster }, 'edMsg');
+  $('edSave').disabled = false;
+  if (res.ok) { dirty = false; loadDraft(); fillEditor(); $('importText').value = ''; }
+};
+$('edDiscard').onclick = () => { dirty = false; loadDraft(); fillEditor(); msg('edMsg', ''); };
+$('edClear').onclick = () => {
+  if (!confirm('ล้างรายชื่อทั้งหมดเพื่อเริ่มสัปดาห์ใหม่? (ยังไม่บันทึกจนกว่าจะกด Save)')) return;
+  draft.roster = []; markDirty(); fillRows();
+};
+$('adminLogout2').onclick = () => { if (!dirty || confirm('ยังไม่ได้บันทึก ออกเลยไหม?')) logout(); };
+$('sSearch').oninput = () => renderSession();
+document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => setView(b.dataset.v));
+function setView(v) {
+  view = v === 'vote' ? 'vote' : 'session';
+  try { history.replaceState(null, '', '#' + view); } catch (e) {}
+  if (S) render();
+}
+addEventListener('hashchange', () => setView(location.hash.slice(1)));
+
+/* ---------- Events ---------- */
+$('signupForm').onsubmit = async e => {
+  e.preventDefault();
+  const name = $('nameInput').value;
+  if (!name.trim()) { msg('signupMsg', 'กรุณาใส่ชื่อ · Please enter your name'); return; }
+  $('signupBtn').disabled = true; msg('signupMsg', '');
+  const res = await call('signup', { name: name });
+  $('signupBtn').disabled = false;
+  if (res.ok) {
+    myId = res.id; store.set('bbf.myId', myId); $('nameInput').value = '';
+    msg('signupMsg', res.existed ? 'ชื่อนี้อยู่ในรายชื่อแล้ว · You\'re already on the list' : 'ลงชื่อสำเร็จ! ขอให้โชคดี 🍀 · You\'re in!', 'ok');
+    lastJSON = ''; apply(res.state);
+  } else msg('signupMsg', res.error);
+};
+$('otherVoter').onclick = () => { myId = ''; store.del('bbf.myId'); $('voterSel').value = ''; selected = ''; renderVote(); };
+$('voterSel').onchange =() => { selected = ''; msg('voteMsg', ''); renderVote(); };
+$('voteBtn').onclick = async () => {
+  const voter = $('voterSel').value, cand = S.people.find(p => p.id === selected);
+  if (!voter || !cand) return;
+  if (!confirm('ยืนยันโหวตให้ ' + cand.name + '?\nConfirm your vote for ' + cand.name + '?')) return;
+  $('voteBtn').disabled = true;
+  const res = await call('vote', { voter: voter, candidate: cand.id });
+  if (res.ok) {
+    myId = voter; store.set('bbf.myId', voter); store.set('bbf.votedFor.' + voter, cand.id);
+    selected = ''; msg('voteMsg', ''); lastJSON = ''; apply(res.state);
+  } else { msg('voteMsg', res.error); $('voteBtn').disabled = false; refresh(); }
+};
+
+$('adminOpen').onclick = () => { $('adminModal').classList.add('open'); msg('pwMsg', ''); $('pwInput').value = ''; setTimeout(() => $('pwInput').focus(), 50); };
+$('adminCancel').onclick = () => $('adminModal').classList.remove('open');
+$('adminForm').onsubmit = async e => {
+  e.preventDefault();
+  const pw = $('pwInput').value;
+  const res = await call('admin', { password: pw, op: 'check' });
+  if (res.ok) { adminPw = pw; store.set('bbf.pw', pw, true); $('adminModal').classList.remove('open'); apply(res.state); renderAdmin(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  else msg('pwMsg', res.error);
+};
+$('adminLogout').onclick = logout;
+document.querySelectorAll('#phaseBtns button').forEach(b => b.onclick = () => {
+  if (b.dataset.p !== S.phase) admin('setPhase', { phase: b.dataset.p });
+});
+$('aSave').onclick = () => admin('setInfo', { title: $('aTitle').value, prize: $('aPrize').value });
+$('aResetVotes').onclick = () => { if (confirm('ล้างผลโหวตทั้งหมด? (รายชื่อยังอยู่)')) admin('resetVotes'); };
+$('aResetAll').onclick = () => { if (confirm('ลบรายชื่อและผลโหวตทั้งหมด แล้วกลับไปช่วงลงชื่อ?')) admin('resetAll'); };
+
+/* ---------- Confetti ---------- */
+function confetti() {
+  const c = $('confetti'), ctx = c.getContext('2d');
+  const W = c.width = innerWidth, H = c.height = innerHeight;
+  const cols = ['#7c3aed', '#db2777', '#f472b6', '#2563eb', '#facc15', '#22c55e'];
+  const ps = Array.from({ length: 160 }, () => ({
+    x: Math.random() * W, y: -20 - Math.random() * H * .6, r: 4 + Math.random() * 5,
+    vx: -1.5 + Math.random() * 3, vy: 2 + Math.random() * 3.5, a: Math.random() * 6, va: -.2 + Math.random() * .4,
+    c: cols[Math.floor(Math.random() * cols.length)]
+  }));
+  const t0 = performance.now();
+  (function frame(t) {
+    ctx.clearRect(0, 0, W, H);
+    ps.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.a += p.va;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.fillStyle = p.c;
+      ctx.fillRect(-p.r, -p.r / 2, p.r * 2, p.r); ctx.restore();
+    });
+    if (t - t0 < 4500) requestAnimationFrame(frame); else ctx.clearRect(0, 0, W, H);
+  })(t0);
+}
+
+/* ---------- Start ---------- */
+show('demoBar', DEMO);
+refresh();
+setInterval(() => { if (!document.hidden) refresh(); }, POLL_MS);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+if (DEMO) addEventListener('storage', e => { if (e.key === 'bbf.demo') refresh(); });
+</script>
+</body>
+</html>
