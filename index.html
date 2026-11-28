@@ -247,6 +247,13 @@
   .lightbox.open{display:flex}
   .lightbox img{max-width:100%;max-height:100%;border-radius:10px;background:#fff}
   .lightbox .close{position:fixed;top:12px;right:12px;border:0;background:rgba(255,255,255,.18);color:#fff;width:42px;height:42px;border-radius:50%;font-size:20px;cursor:pointer}
+  .errpop{position:fixed;inset:0;background:rgba(23,37,95,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+  .errpop.open{display:flex}
+  .errpop .box{background:#fff;border-radius:20px;max-width:360px;width:100%;padding:22px 20px 18px;text-align:center;box-shadow:0 20px 50px rgba(23,37,95,.25);animation:popin .18s ease-out}
+  .errpop .ico{width:52px;height:52px;border-radius:50%;background:var(--err-bg);color:var(--err);display:grid;place-items:center;font-size:26px;margin:0 auto 10px}
+  .errpop h2{margin:0 0 6px;font-size:18px;color:var(--navy)}
+  .errpop p{margin:0 0 16px;color:#3b4670;font-size:14.5px;line-height:1.5;word-break:break-word}
+  @keyframes popin{from{transform:scale(.92);opacity:0}to{transform:none;opacity:1}}
   canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
 
   /* ---------- Desktop layout ---------- */
@@ -580,6 +587,15 @@
   <img id="lbImg" alt="">
 </div>
 
+<div class="errpop" id="errPop" role="alertdialog" aria-modal="true" aria-labelledby="errTitle" aria-describedby="errText">
+  <div class="box">
+    <div class="ico" aria-hidden="true">!</div>
+    <h2 id="errTitle">Something went wrong</h2>
+    <p id="errText"></p>
+    <button class="btn block" id="errOk" type="button">OK</button>
+  </div>
+</div>
+
 <canvas id="confetti"></canvas>
 
 <script>
@@ -678,9 +694,9 @@ function core(d, action, p, adminPassword, io) {
       const data = String(p.data || '');
       if (data.length < 100 || !/^[A-Za-z0-9+/]+={0,2}$/.test(data)) return err('That file doesn\'t look like an image.');
       if (data.length > 2000000) return err('The image is too large. Please try a smaller one.');
-      let fileId = '';
-      try { fileId = io.saveSlip(data, 'slip-' + r.id + '-' + now + '.jpg'); } catch (e) {}
-      if (!fileId) return err('Could not save the slip. Please try again.');
+      let fileId = '', why = '';
+      try { fileId = io.saveSlip(data, 'slip-' + r.id + '-' + now + '.jpg'); } catch (e) { why = String((e && e.message) || e).slice(0, 160); }
+      if (!fileId) return err('Could not save the slip. Please try again.' + (why ? ' (Server: ' + why + ')' : ''));
       dropSlip(r);
       r.slipId = fileId; r.slipAt = now;
       return ok({ changed: true });
@@ -868,7 +884,20 @@ function avatar(name, id) {
 const msgTimers = {};
 function msg(id, text, kind) {
   clearTimeout(msgTimers[id]);
-  const m = $(id); m.textContent = text || ''; m.className = 'msg' + (text ? ' ' + (kind || 'err') : '');
+  const m = $(id);
+  if (text && (kind || 'err') === 'err') { m.textContent = ''; m.className = 'msg'; showError(text); return; }
+  m.textContent = text || ''; m.className = 'msg' + (text ? ' ' + kind : '');
+}
+let errReturnFocus = null;
+function showError(text) {
+  $('errText').textContent = text;
+  errReturnFocus = document.activeElement;
+  $('errPop').classList.add('open');
+  setTimeout(() => $('errOk').focus(), 30);
+}
+function closeError() {
+  $('errPop').classList.remove('open');
+  if (errReturnFocus && errReturnFocus.focus) try { errReturnFocus.focus(); } catch (e) {}
 }
 function flash(id, text) { msg(id, text, 'ok'); msgTimers[id] = setTimeout(() => msg(id, ''), 2500); }
 function show(id, on) { $(id).classList.toggle('hidden', !on); }
@@ -887,7 +916,7 @@ function setMyJoined(o) { store.set('bbf.joined', JSON.stringify(o)); }
 async function refresh() {
   const res = await call('state');
   if (res.ok) apply(res.state);
-  else if (!S) $('loading').textContent = res.error || 'Could not load. Please refresh.';
+  else if (!S) { $('loading').textContent = 'Could not load. Please refresh the page.'; showError(res.error || 'Could not load. Please refresh the page.'); }
 }
 function apply(state) {
   const j = JSON.stringify(state);
@@ -1381,7 +1410,9 @@ $('groupImg').onclick = () => openImage($('groupImg').src, $('groupImg').alt);
 $('posterImg').onclick = () => openImage($('posterImg').src, $('posterImg').alt);
 $('lightbox').onclick = e => { if (e.target !== $('lbImg')) closeImage(); };
 $('lbClose').onclick = closeImage;
-addEventListener('keydown', e => { if (e.key === 'Escape') { closeImage(); $('adminModal').classList.remove('open'); } });
+addEventListener('keydown', e => { if (e.key === 'Escape') { closeError(); closeImage(); $('adminModal').classList.remove('open'); } });
+$('errOk').onclick = closeError;
+$('errPop').onclick = e => { if (e.target === $('errPop')) closeError(); };
 
 SES_KEYS.forEach(k => { $('f_' + k).oninput = markDirty; });
 $('edSave').onclick = async () => {
